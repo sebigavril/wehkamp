@@ -1,3 +1,4 @@
+GET     /                               @com.wehkart.controller.CatalogController.list()
 GET     /api/catalog                    @com.wehkart.controller.CatalogController.list()
 POST    /api/catalog                    @com.wehkart.controller.CatalogController.add(amount: Int ?= 1)
 
