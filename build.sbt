@@ -1,16 +1,22 @@
 name := "wehkart"
-
 version := "1.0"
-
 scalaVersion := "2.11.7"
+
+
+lazy val wehkart = (project in file("."))
+  .enablePlugins(PlayScala)
 
 
 lazy val akkaVersion = "2.4.1"
 lazy val playVersion = "2.4.6"
 
+resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots/"
+
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %  "akka-actor_2.11"  % akkaVersion,
+  "com.typesafe.akka" %% "akka-slf4j"       % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit"     % akkaVersion,
   "com.typesafe.play" %% "play-ws"          % playVersion,
   "com.typesafe.play" %% "play-json"        % playVersion,
-  "org.scalatest"     %% "scalatest"        % "2.2.4"       % Test)
+  "org.scalatest"     %% "scalatest"        % "2.2.4"       % Test,
+  "com.typesafe.play" %% "play-test"        % playVersion   % Test)

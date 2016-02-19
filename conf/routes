@@ -1,0 +1,6 @@
+GET     /api/catalog                    @com.wehkart.controller.CatalogController.list()
+POST    /api/catalog                    @com.wehkart.controller.CatalogController.add(amount: Int ?= 1)
+
+GET     /api/shoppingbasket/:userId     @com.wehkart.controller.BasketController.list(userId: Long)
+POST    /api/shoppingbasket/:userId     @com.wehkart.controller.BasketController.add(userId: Long, productId: String, amount: Int ?= 1)
+DELETE  /api/shoppingbasket/:userId     @com.wehkart.controller.BasketController.delete(userId: Long, productId: String, amount: Int ?= 1)
