@@ -10,7 +10,9 @@ lazy val wehkart = (project in file("."))
 lazy val akkaVersion = "2.4.1"
 lazy val playVersion = "2.4.6"
 
-resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots/"
+resolvers ++=  Seq(
+  "Typesafe Snapshots"     at "http://repo.typesafe.com/typesafe/snapshots/",
+  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/")
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %  "akka-actor_2.11"  % akkaVersion,
