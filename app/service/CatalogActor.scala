@@ -48,9 +48,8 @@ private class CatalogActor(productsRepo: ProductsRepository) extends Actor {
 
   private def removeValidAmount(items: Set[ShoppingProduct], productId: String, amount: Long) = {
     items.find(_.id == productId) match {
-      case Some(ShoppingProduct(_, _, currentAmount))
-        if currentAmount > 0  => removeProduct(items, productId, amount, currentAmount)
-      case None               => sendAndReturn(OutOfStock, items)
+      case Some(ShoppingProduct(_, _, currentAmount)) => removeProduct(items, productId, amount, currentAmount)
+      case None                                       => sendAndReturn(OutOfStock, items)
     }
   }
 
@@ -58,14 +57,12 @@ private class CatalogActor(productsRepo: ProductsRepository) extends Actor {
     def find            = items.find(_.id == productId)
     def outOfStock      = find.map(_.amount == 0).getOrElse(true)
     def notEnoughStock  = find.map(_.amount < amount).getOrElse(true)
-    def removeAll       = items.filterNot(_.id == productId)
     def removeExisting  = items.filterNot(_.id == productId) ++ find.map(removeAmount)
     def removeAmount(p: ShoppingProduct) = ShoppingProduct.from(p, Some(p.amount - amount))
 
     if(outOfStock)                    sendAndReturn(OutOfStock, items)
     else if(notEnoughStock)           sendAndReturn(StockNotEnough, items)
-    else if (currentCount > amount)   sendAndReturn(Done, removeExisting)
-    else if (currentCount == amount)  sendAndReturn(Done, removeAll)
+    else if (currentCount >= amount)  sendAndReturn(Done, removeExisting)
     else                              sendAndReturn(Done, items)
   }
 

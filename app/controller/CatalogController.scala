@@ -3,7 +3,7 @@ package com.wehkart.controller
 import scala.concurrent.{ExecutionContext, Future}
 import javax.inject.Inject
 import com.wehkart.ActorProtocol.{Done, InvalidAmount}
-import com.wehkart.controller.Messages.ProductInvalidAmount
+import com.wehkart.controller.Messages.{ProductInvalidAmount, GenericError}
 import com.wehkart.domain.ShoppingProduct
 import play.api.libs.json.{JsError, Json}
 import play.api.mvc.{Action, Controller}
@@ -31,8 +31,9 @@ class CatalogController @Inject() (
           catalogService
             .add(basketProduct.product, basketProduct.amount)
             .map {
-              case Done                     => Created
-              case InvalidAmount => BadRequest(Json.toJson(ProductInvalidAmount(amount)))
+              case Done           => Created
+              case InvalidAmount  => BadRequest(Json.toJson(ProductInvalidAmount(amount)))
+              case _              => InternalServerError(Json.toJson(GenericError))
             }
         }
       )

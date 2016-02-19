@@ -7,7 +7,7 @@ import InMemoryProducts._
 
 class InMemoryRepositorySpec extends WordSpecLike with MustMatchers {
 
-  "InMemoryRepository" must {
+  "an InMemoryRepository" must {
     "return correct products" in {
       InMemoryProducts.initialProducts.map(p => (p.product, p.amount)) mustEqual
         Set(

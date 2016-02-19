@@ -1,10 +1,13 @@
 package com.wehkart
 
-import com.google.inject.Inject
+import akka.actor.ActorSystem
+import com.google.inject.Singleton
 
-class ExecutionContexts @Inject() () {
+class ExecutionContexts @Singleton()() {
 
-  //todo configure this
-  implicit def ec = scala.concurrent.ExecutionContext.Implicits.global
+  implicit def ec = dispatcher
+
+  private lazy val system = ActorSystem("ExecutionContextLooker")
+  private lazy val dispatcher = system.dispatchers.lookup("my-dispatcher")
 
 }

@@ -7,7 +7,7 @@ import com.wehkart.repository.InMemoryProducts.iPhone
 
 class BasketWritesSpec extends WordSpecLike with MustMatchers {
 
-  "BasketWrites" must {
+  "a BasketWrites" must {
     "write a ProductLike object " in {
       import com.wehkart.viewmodel.BasketWrites.productLikeWriter
       val product: ProductLike = iPhone

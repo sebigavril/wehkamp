@@ -1,8 +1,9 @@
 package com.wehkart
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
+import javax.inject.Inject
 import akka.actor._
 import akka.util.Timeout
 import com.wehkart.repository.InMemoryProducts
@@ -11,29 +12,34 @@ import com.wehkart.service.{BasketActor, CatalogActor}
 /**
   * Singleton responsible for starting the actors and their context
   */
-object ActorContext {
-
-  private lazy val actorSystemName = "ShoppingActorSystem"
-  private lazy val system = ActorSystem(actorSystemName)
+class ActorContext @Inject() (system: ActorSystem) {
 
   implicit private val ec = new ExecutionContexts().ec
 
   /**
     * Singleton - don't want to have multiple catalogs
     */
-  val catalogActor = system.actorOf(CatalogActor.props(InMemoryProducts), "Catalog")
+  val catalogActor = {
+    Await.result(
+      createIfNotExists(path("Catalog"), system.actorOf(CatalogActor.props(InMemoryProducts), "Catalog")),
+      ActorConstants.duration)
+  }
 
-  def basketActor(userId: Long)(implicit ec: ExecutionContext): ActorRef = {
+  def basketActor(userId: Long): ActorRef = {
     val name = s"Basket-$userId"
-    val path = s"akka://$actorSystemName/user/$name"
 
-    val actorRef = system
+    Await.result(
+      createIfNotExists(path(name), system.actorOf(BasketActor.props(userId, catalogActor), name)),
+      ActorConstants.duration)
+  }
+
+  private def createIfNotExists(path: String, default: => ActorRef) =
+    system
       .actorSelection(path)
       .resolveOne(10 seconds)
-      .recover { case _: ActorNotFound => system.actorOf(BasketActor.props(userId, catalogActor), name) }
+      .recover { case _: ActorNotFound => default }
 
-    Await.result(actorRef, ActorConstants.duration)
-  }
+  private def path(name: String) = s"akka://${system.name}/user/$name"
 }
 
 object ActorProtocol {
@@ -57,6 +63,9 @@ object ActorProtocol {
 }
 
 object ActorConstants {
+
+  val actorSystemName = "ShoppingActorSystem"
+
   val duration = 5 seconds
   implicit val timeout = Timeout(duration)
 }

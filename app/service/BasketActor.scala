@@ -23,7 +23,7 @@ private class BasketActor(
     case ListAll                   => sender() ! items
     case Add(productId, amount)    => context become active(add(items, productId, amount))
     case Remove(productId, amount) => context become active(remove(items, productId, amount))
-    case RemoveAll                 => context become active(removeAll)
+    case RemoveAll                 => context become active(removeAll(items))
   }
 
   /**
@@ -89,13 +89,18 @@ private class BasketActor(
     def allExcludingProduct               = items.filterNot(_.id == productId)
     def removeAmount(p: ShoppingProduct)  = ShoppingProduct.from(p, Some(p.amount - amount))
 
+    catalog ! Add(productId, amount)
+
     val finalItems =
       if (amount >= currentAmount)  allExcludingProduct
       else                          allExcludingProduct ++ findProduct.map(removeAmount)
     sendAndReturn(Done, finalItems)
   }
 
-  private def removeAll = sendAndReturn(Done, Set.empty)
+  private def removeAll(items: Set[ShoppingProduct]) = {
+    items.foreach(p => catalog ! Add(p.id, p.amount))
+    sendAndReturn(Done, Set.empty)
+  }
 
   private def sendAndReturn(msg: ActorMessage,items: Set[ShoppingProduct]) = {
     sender() ! msg

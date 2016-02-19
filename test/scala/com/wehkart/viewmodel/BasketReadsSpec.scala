@@ -7,7 +7,7 @@ import play.api.libs.json.Json
 
 class BasketReadsSpec extends WordSpecLike with MustMatchers with OptionValues {
 
-  "BasketReads" must {
+  "a BasketReads" must {
     "read a ProductLike object " in {
       import com.wehkart.viewmodel.BasketReads.productReads
       val json = Json.parse(

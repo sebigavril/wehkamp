@@ -1,18 +1,21 @@
 package com.wehkamp
 
 import scala.concurrent.ExecutionContext
-import javax.inject.{Inject, Provider}
-import akka.actor.ActorRef
-import com.wehkamp.AppModule.BasketActorProvider
-import com.wehkart.{ExecutionContexts, ActorContext}
+import javax.inject.Inject
+import akka.actor.{ActorSystem, ActorRef}
 import com.wehkart.service.BasketService
-import play.api.{Configuration, Environment}
+import com.wehkart.{ActorContext, ExecutionContexts}
 import play.api.inject._
+import play.api.{Configuration, Environment}
 import service.CatalogService
+import com.wehkart.ActorConstants.actorSystemName
 
 class AppModule extends Module {
 
   implicit private val ec = new ExecutionContexts().ec
+
+  private val system = ActorSystem(actorSystemName)
+  private val actorContext = new ActorContext(system)
 
   def bindings(environment: Environment, configuration: Configuration) =
     Seq(
@@ -21,15 +24,14 @@ class AppModule extends Module {
       bind[CatalogService].toSelf,
       bind[BasketService].toSelf,
 
-      bind[ActorRef].qualifiedWith("catalogActor").toInstance(ActorContext.catalogActor),
-      bind[ActorRef].qualifiedWith("basketActor").toProvider[BasketActorProvider])
+      bind[ActorContext].toInstance(actorContext),
+      bind[ActorRef].qualifiedWith("catalogActor").toInstance(actorContext.catalogActor),
+      bind[BasketActorFactory].toSelf)
 }
 
-object AppModule {
+class BasketActorFactory @Inject() (
+  actorContext: ActorContext)(
+  implicit ec: ExecutionContext) {
 
-  implicit private val ec = new ExecutionContexts().ec
-
-  class BasketActorProvider @Inject() extends Provider[ActorRef] {
-    override def get() = ActorContext.basketActor(1)
-  }
+  def get(userId: Long) = actorContext.basketActor(userId)
 }
