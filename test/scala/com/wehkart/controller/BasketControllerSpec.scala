@@ -28,7 +28,7 @@ class BasketControllerSpec extends ActorContextBaseSpec
   "a BasketController" must {
     "list all products in a basket" in WithNextId { userId =>
       new WithApplication {
-        basketService.add(userId, iPadId, 10)
+        basketService.put(userId, iPadId, 10)
         val result = basketController.list(userId).apply(FakeRequest(GET, URL))
         val products = Json.fromJson[Set[ShoppingProduct]](contentAsJson(result)).asOpt.value
 
@@ -40,7 +40,7 @@ class BasketControllerSpec extends ActorContextBaseSpec
 
     "add one product in a basket" in WithNextId { userId =>
       new WithApplication {
-        val addResult = basketController.add(userId, iPadId, 1).apply(FakeRequest(POST, URL))
+        val addResult = basketController.put(userId, iPadId, 1).apply(FakeRequest(PUT, URL))
         status(addResult) mustEqual CREATED
         contentType(addResult) mustEqual None
 
@@ -55,7 +55,7 @@ class BasketControllerSpec extends ActorContextBaseSpec
 
     "not add an inexistent product in a basket" in WithNextId { userId =>
       new WithApplication {
-        val addResult = basketController.add(userId, "DUMMY_ID", 1).apply(FakeRequest(POST, URL))
+        val addResult = basketController.put(userId, "DUMMY_ID", 1).apply(FakeRequest(PUT, URL))
         status(addResult) mustEqual NOT_FOUND
         contentType(addResult) mustEqual Some(JSON)
         contentAsString(addResult) mustEqual """"Sorry, we're out of stock for this product""""
@@ -64,7 +64,7 @@ class BasketControllerSpec extends ActorContextBaseSpec
 
     "not add more products than in stock in a basket" in WithNextId { userId =>
       new WithApplication {
-        val addResult = basketController.add(userId, iPadId, Int.MaxValue).apply(FakeRequest(POST, URL))
+        val addResult = basketController.put(userId, iPadId, Int.MaxValue).apply(FakeRequest(PUT, URL))
         status(addResult) mustEqual NOT_FOUND
         contentType(addResult) mustEqual Some(JSON)
         contentAsString(addResult) mustEqual """"Sorry, we don't have enough stock for this product""""
@@ -73,7 +73,7 @@ class BasketControllerSpec extends ActorContextBaseSpec
 
     "not add a negative number of products in a basket" in WithNextId { userId =>
       new WithApplication {
-        val addResult = basketController.add(userId, iPadId, -1).apply(FakeRequest(POST, URL))
+        val addResult = basketController.put(userId, iPadId, -1).apply(FakeRequest(PUT, URL))
         status(addResult) mustEqual BAD_REQUEST
         contentType(addResult) mustEqual Some(JSON)
         contentAsString(addResult) mustEqual """"You're trying to add an invalid number of products: -1""""
@@ -83,7 +83,7 @@ class BasketControllerSpec extends ActorContextBaseSpec
     "delete one product from the basket" in WithNextId { userId =>
       new WithApplication {
         val res = for {
-          _       <- basketController.add(userId, iPadId, 1).apply(FakeRequest(POST, URL))
+          _       <- basketController.put(userId, iPadId, 1).apply(FakeRequest(PUT, URL))
           delete  <- basketController.delete(userId, iPadId, 1).apply(FakeRequest(DELETE, URL))
           get     <- basketController.list(userId).apply(FakeRequest(GET, URL))
         } yield (delete, get)

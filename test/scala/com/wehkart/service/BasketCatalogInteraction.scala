@@ -26,7 +26,7 @@ class BasketCatalogInteraction extends ActorContextBaseSpec
   "a Basket and Catalog" must {
     "add to basket and remove from catalog" in WithNextId { userId =>
       val res = for {
-        _           <- basketService.add(userId, iPadId, 10)
+        _           <- basketService.put(userId, iPadId, 10)
         catalogRes  <- catalogService.list
       } yield catalogRes
 
@@ -35,7 +35,7 @@ class BasketCatalogInteraction extends ActorContextBaseSpec
 
     "remove from basket and add to catalog" in WithNextId { userId =>
       val res = for {
-        _           <- basketService.add(userId, iPhoneId, 50)
+        _           <- basketService.put(userId, iPhoneId, 50)
         _           <- basketService.remove(userId, iPhoneId, 40)
         catalogRes  <- catalogService.list
       } yield catalogRes

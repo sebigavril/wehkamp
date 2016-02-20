@@ -21,12 +21,12 @@ class BasketController @Inject() (
         case Left(InternalError)  => InternalServerError(Json.toJson(GenericError))}
   }
 
-  def add(userId: Long, productId: String, amount: Int) = Action.async {
+  def put(userId: Long, productId: String, amount: Long) = Action.async {
     implicit request =>
       basketService
-        .add(userId, productId, amount)
+        .put(userId, productId, amount)
         .map {
-          case Added          => Created
+          case Put          => Created
           case OutOfStock     => NotFound(Json.toJson(ProductOutOfStock))
           case StockNotEnough => NotFound(Json.toJson(ProductNotEnoughStock))
           case InvalidAmount  => BadRequest(Json.toJson(ProductInvalidAmount(amount)))
@@ -34,7 +34,7 @@ class BasketController @Inject() (
         }
   }
 
-  def delete(userId: Long, productId: String, amount: Int) = Action.async {
+  def delete(userId: Long, productId: String, amount: Long) = Action.async {
     implicit request =>
       basketService
         .remove(userId, productId, amount)

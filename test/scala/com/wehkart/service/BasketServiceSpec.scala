@@ -28,8 +28,8 @@ class BasketServiceSpec extends ActorContextBaseSpec
 
     "add multiple products to basket" in WithNextId { userId =>
       val res = for {
-        _   <- basketService.add(userId, iPadId, 2)
-        _   <- basketService.add(userId, iPhoneId, 10)
+        _   <- basketService.put(userId, iPadId, 2)
+        _   <- basketService.put(userId, iPhoneId, 10)
         all <- basketService.list(userId)
       } yield all
 
@@ -39,8 +39,8 @@ class BasketServiceSpec extends ActorContextBaseSpec
 
     "remove products from basket" in WithNextId { userId =>
       val res = for {
-        _       <- basketService.add(userId, iPadId, 2)
-        _       <- basketService.add(userId, iPhoneId, 10)
+        _       <- basketService.put(userId, iPadId, 2)
+        _       <- basketService.put(userId, iPhoneId, 10)
         success <- basketService.remove(userId, iPhoneId, 1)
         fail    <- basketService.remove(userId, iPhoneId, 0)
       } yield (success, fail)
@@ -51,8 +51,8 @@ class BasketServiceSpec extends ActorContextBaseSpec
 
     "remove all products from basket" in WithNextId { userId =>
       val res = for {
-        _       <- basketService.add(userId, iPadId, 2)
-        _       <- basketService.add(userId, iPhoneId, 10)
+        _       <- basketService.put(userId, iPadId, 2)
+        _       <- basketService.put(userId, iPhoneId, 10)
         remove  <- basketService.removeAll(userId)
         list    <- basketService.list(userId)
       } yield (remove, list)

@@ -26,10 +26,10 @@ class BasketService @Inject() (
       }
   }
 
-  def add(userId: Long, productId: String, howMany: Long): Future[BasketServiceResponse] = {
+  def put(userId: Long, productId: String, howMany: Long): Future[BasketServiceResponse] = {
     (basketActorFactory.get(userId) ? ActorProtocol.Add(productId, howMany))
       .map {
-        case ActorProtocol.Done                     => Added
+        case ActorProtocol.Done                     => Put
         case ActorProtocol.OutOfStock               => OutOfStock
         case ActorProtocol.StockNotEnough           => StockNotEnough
         case ActorProtocol.InvalidAmount => InvalidAmount
@@ -62,7 +62,7 @@ class BasketService @Inject() (
 object BasketServiceProtocol {
   sealed trait BasketServiceResponse
 
-  case object Added           extends BasketServiceResponse
+  case object Put           extends BasketServiceResponse
   case object Deleted         extends BasketServiceResponse
   case object Emptied         extends BasketServiceResponse
   case object OutOfStock      extends BasketServiceResponse
