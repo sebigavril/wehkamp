@@ -1,9 +1,9 @@
-name := "wehkart"
+name := "wehkamp"
 version := "1.0"
 scalaVersion := "2.11.7"
 
 
-lazy val wehkart = (project in file("."))
+lazy val wehkamp = (project in file("."))
   .enablePlugins(PlayScala)
 
 
