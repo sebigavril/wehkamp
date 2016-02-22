@@ -3,7 +3,7 @@ package com.wehkamp.service
 import scala.concurrent.Await
 import akka.actor.ActorSystem
 import com.wehkamp.ActorConstants.duration
-import com.wehkamp.TestUtils._
+import com.wehkamp.TestUtils.{expectProducts, ec}
 import com.wehkamp.repository.InMemoryProducts._
 import com.wehkamp.{ActorContext, ActorContextBaseSpec, BasketActorFactory}
 import org.scalatest.{MustMatchers, OptionValues, WordSpecLike}

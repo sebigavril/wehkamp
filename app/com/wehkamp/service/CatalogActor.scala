@@ -1,6 +1,7 @@
 package com.wehkamp.service
 
 import akka.actor.{Actor, Props}
+import com.wehkamp.ActorProtocol.Catalog._
 import com.wehkamp.ActorProtocol._
 import com.wehkamp.domain.ShoppingProduct
 import com.wehkamp.repository.ProductsRepository
@@ -17,20 +18,20 @@ private class CatalogActor(productsRepo: ProductsRepository) extends Actor {
     * This will happen even if the client never buys anything.
     *
     * A better approach, in my opinion, is to allow for eventual consistency.
-    * The client will always check if there are enough products in stock (handling [[com.wehkamp.ActorProtocol.Add]]).
-    * But when he want's to add items to the basket, the stocks are not updated (handling [[com.wehkamp.ActorProtocol.Remove]]).
+    * The client will always check if there are enough products in stock (handling [[com.wehkamp.ActorProtocol.Catalog.Add]]).
+    * But when he want's to add items to the basket, the stocks are not updated (handling [[com.wehkamp.ActorProtocol.Catalog.Remove]]).
     * Removing from the stock should happen only when the client hits the "buy" button.
     * If in the meantime, the stock is gone, he will see a message stating this.
     * This is how I would advice on implementing this scenario.
     */
   private def active(items: Set[ShoppingProduct]): Receive = {
-    case ListAll                   => sender() ! items
-    case AddCatalog(productId, amount)    => context become active(add(items, productId, amount))
-    case RemoveCatalog(productId, amount) => context become active(remove(items, productId, amount))
+    case List                   => sender() ! items
+    case Add(productId, amount)    => context become active(add(items, productId, amount))
+    case Remove(productId, amount) => context become active(remove(items, productId, amount))
   }
 
   private def add(items: Set[ShoppingProduct], productId: String, amount: Long) =
-    if (amount > 0) sendAndReturn(Done(addValidAmount(items, productId, amount).map(p => BasketProduct(p.id, p.amount))), addValidAmount(items, productId, amount))
+    if (amount > 0) sendAndReturn(Done, addValidAmount(items, productId, amount))
     else            sendAndReturn(InvalidAmount, items)
 
 
@@ -62,8 +63,8 @@ private class CatalogActor(productsRepo: ProductsRepository) extends Actor {
 
     if (outOfStock)                   sendAndReturn(OutOfStock, items)
     else if (notEnoughStock)          sendAndReturn(StockNotEnough, items)
-    else if (currentCount >= amount)  sendAndReturn(Done(removeExisting.map(p => BasketProduct(p.id, p.amount))), removeExisting)
-    else                              sendAndReturn(Done(items.map(p => BasketProduct(p.id, p.amount))), items)
+    else if (currentCount >= amount)  sendAndReturn(Done, removeExisting)
+    else                              sendAndReturn(Done, items)
   }
 
   private def sendAndReturn(msg: ActorMessage, items: Set[ShoppingProduct]) = {

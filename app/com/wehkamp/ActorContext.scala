@@ -45,16 +45,24 @@ object ActorProtocol {
 
   sealed trait ActorMessage
 
-  //commands
-  case object ListAll                                          extends ActorMessage
-  case class  AddCatalog(productId: String, howMany: Long)     extends ActorMessage
-  case class  RemoveCatalog(productId: String, howMany: Long)  extends ActorMessage
+  object Catalog {
+    //commands
+    case object List                                      extends ActorMessage
+    case class  Add(productId: String, howMany: Long)     extends ActorMessage
+    case class  Remove(productId: String, howMany: Long)  extends ActorMessage
 
-  case class  Add(products: Set[BasketProduct], productId: String, howMany: Long)     extends ActorMessage
-  case class  Remove(products: Set[BasketProduct], productId: String, howMany: Long)  extends ActorMessage
+    //ok
+    case object Done  extends ActorMessage
+  }
 
-  //ok
-  case class Done(products: Set[BasketProduct]) extends ActorMessage
+  object Basket {
+    //commands
+    case class Add(products: Set[BasketProduct], productId: String, howMany: Long)    extends ActorMessage
+    case class Remove(products: Set[BasketProduct], productId: String, howMany: Long) extends ActorMessage
+
+    //ok
+    case class Done(products: Set[BasketProduct]) extends ActorMessage
+  }
 
   //errors
   case object InvalidAmount       extends ActorMessage

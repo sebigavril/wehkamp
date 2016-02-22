@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong
 import akka.actor.{ActorSystem, ActorRef}
 import akka.pattern.ask
 import com.wehkamp.ActorConstants.{duration, timeout}
-import com.wehkamp.ActorProtocol.ListAll
+import com.wehkamp.ActorProtocol.Catalog._
 import com.wehkamp.domain.{ProductLike, ShoppingProduct}
 import com.wehkamp.repository.InMemoryProducts
 import org.scalatest.MustMatchers
@@ -17,11 +17,16 @@ object TestUtils extends MustMatchers {
   val actorSystem = ActorSystem("TestActorSystem")
   val actorContext = new ActorContext(actorSystem)
 
+  lazy val iPad     = InMemoryProducts.iPad.toBasket
+  lazy val iPhone   = InMemoryProducts.iPhone.toBasket
+  lazy val galaxyS  = InMemoryProducts.galaxyS.toBasket
+  lazy val candy    = InMemoryProducts.candy.toBasket
+
 
   def id(p: ProductLike): String = InMemoryProducts.initialProducts.find(_.product == p).get.id
 
   def expectProducts(actor: ActorRef, expected: Set[ShoppingProduct]): Unit = {
-    val res = actor ? ListAll
+    val res = actor ? List
     val actual = Await.result(res, duration).asInstanceOf[Set[ShoppingProduct]]
 
     expectProducts(actual, expected)

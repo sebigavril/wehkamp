@@ -1,7 +1,6 @@
 package com.wehkamp.controller
 
 import com.wehkamp.TestUtils._
-import com.wehkamp.repository.InMemoryProducts.{candy, iPad}
 import com.wehkamp.service.{BasketProduct, BasketService}
 import com.wehkamp.viewmodel.ProductReads.basketProductReads
 import com.wehkamp.{ActorContextBaseSpec, BasketActorFactory}

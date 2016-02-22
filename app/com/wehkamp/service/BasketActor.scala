@@ -2,9 +2,11 @@ package com.wehkamp.service
 
 import scala.concurrent.{ExecutionContext, Await, Future}
 import akka.actor.SupervisorStrategy.Stop
-import akka.actor.{PoisonPill, Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.pattern.ask
 import com.wehkamp.ActorConstants.{duration, timeout}
+import com.wehkamp.ActorProtocol.Catalog
+import com.wehkamp.ActorProtocol.Basket._
 import com.wehkamp.ActorProtocol._
 import com.wehkamp.domain.ShoppingProduct
 
@@ -34,7 +36,7 @@ private class BasketActor(
   }
 
   private def addValidAmount(items: Set[BasketProduct], productId: String, amount: Long) = {
-    val productsInCatalog = (catalog ? ListAll).map(_.asInstanceOf[Set[ShoppingProduct]])
+    val productsInCatalog = (catalog ? Catalog.List).map(_.asInstanceOf[Set[ShoppingProduct]])
 
     val res = productsInCatalog.flatMap {
       _.find(_.id == productId) match {
@@ -46,11 +48,11 @@ private class BasketActor(
   }
 
   private def addProductIfStillAvailable(items: Set[BasketProduct], product: ShoppingProduct, amount: Long) = {
-    val catalogResponse = catalog ? RemoveCatalog(product.id, amount)
+    val catalogResponse = catalog ? Catalog.Remove(product.id, amount)
     catalogResponse.map {
       case OutOfStock     => sendAndReturn(OutOfStock, items)
       case StockNotEnough => sendAndReturn(StockNotEnough, items)
-      case Done(_)        => addProduct(items, product, amount)
+      case Catalog.Done   => addProduct(items, product, amount)
     }
   }
 
@@ -84,7 +86,7 @@ private class BasketActor(
     def allExcludingProduct               = items.filterNot(_.id == productId)
     def removeAmount(p: BasketProduct)  = BasketProduct(p.id, p.amount - amount)
 
-    catalog ! AddCatalog(productId, amount)
+    catalog ! Catalog.Add(productId, amount)
 
     val finalItems =
       if (amount >= currentAmount)  allExcludingProduct
@@ -93,7 +95,7 @@ private class BasketActor(
   }
 
   private def removeAll(items: Set[ShoppingProduct]) = {
-    items.foreach(p => catalog ! AddCatalog(p.id, p.amount))
+    items.foreach(p => catalog ! Catalog.Add(p.id, p.amount))
     sendAndReturn(Done(Set.empty), Set.empty)
   }
 

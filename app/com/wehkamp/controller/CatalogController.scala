@@ -2,7 +2,8 @@ package com.wehkamp.controller
 
 import scala.concurrent.{ExecutionContext, Future}
 import javax.inject.Inject
-import com.wehkamp.ActorProtocol.{Done, InvalidAmount}
+import com.wehkamp.ActorProtocol.InvalidAmount
+import com.wehkamp.ActorProtocol.Catalog.Done
 import com.wehkamp.controller.Messages.{GenericError, ProductInvalidAmount}
 import com.wehkamp.domain.ShoppingProduct
 import com.wehkamp.service.CatalogService
@@ -31,7 +32,7 @@ class CatalogController @Inject() (
           catalogService
             .add(basketProduct.product, basketProduct.amount)
             .map {
-              case Done(_)        => Created
+              case Done           => Created
               case InvalidAmount  => BadRequest(Json.toJson(ProductInvalidAmount(amount)))
               case _              => InternalServerError(Json.toJson(GenericError))
             }
