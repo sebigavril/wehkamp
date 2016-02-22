@@ -14,7 +14,7 @@ class CatalogController @Inject() (
   implicit ec: ExecutionContext) extends Controller {
 
   def list() = Action.async {
-    import com.wehkamp.viewmodel.BasketWrites.basketProductWriter
+    import com.wehkamp.viewmodel.ProductWrites.shoppingProductWriter
     catalogService
       .list
       .map(products => Ok(Json.toJson(products)))
@@ -22,7 +22,7 @@ class CatalogController @Inject() (
 
   def add(amount: Int) = Action.async(parse.tolerantJson) {
     implicit request =>
-      import com.wehkamp.viewmodel.BasketReads.basketProductReads
+      import com.wehkamp.viewmodel.ProductReads.shoppingProductReads
       request.body.validate[ShoppingProduct].fold(
         errors => {
           Future.successful(BadRequest(JsError.toJson(errors)))
@@ -31,7 +31,7 @@ class CatalogController @Inject() (
           catalogService
             .add(basketProduct.product, basketProduct.amount)
             .map {
-              case Done           => Created
+              case Done(_)        => Created
               case InvalidAmount  => BadRequest(Json.toJson(ProductInvalidAmount(amount)))
               case _              => InternalServerError(Json.toJson(GenericError))
             }

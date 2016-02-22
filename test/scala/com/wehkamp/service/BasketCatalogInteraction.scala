@@ -19,27 +19,24 @@ class BasketCatalogInteraction extends ActorContextBaseSpec
   private val basketService = new BasketService(new BasketActorFactory(actorContext))
   private val catalogService = new CatalogService(actorContext.catalogActor)
 
-  private val iPadId = id(iPad)
-  private val iPhoneId = id(iPhone)
-
   "a Basket and Catalog" must {
     "add to basket and remove from catalog" in WithNextId { userId =>
       val res = for {
-        _           <- basketService.put(userId, iPadId, 10)
+        _           <- basketService.put(Set.empty, iPad.id, 10)
         catalogRes  <- catalogService.list
       } yield catalogRes
 
-      Await.result(res, duration).find(_.id == iPadId).value mustEqual ShoppingProduct(iPadId, iPad, 90)
+      Await.result(res, duration).find(_.id == iPad.id).value mustEqual iPad.copy(amount = 90)
     }
 
     "remove from basket and add to catalog" in WithNextId { userId =>
       val res = for {
-        _           <- basketService.put(userId, iPhoneId, 50)
-        _           <- basketService.remove(userId, iPhoneId, 40)
+        _           <- basketService.put(Set.empty, iPhone.id, 50)
+        _           <- basketService.remove(Set(iPhone.copy(amount = 50).toBasket), iPhone.id, 40)
         catalogRes  <- catalogService.list
       } yield catalogRes
 
-      Await.result(res, duration).find(_.id == iPhoneId).value mustEqual ShoppingProduct(iPhoneId, iPhone, 80)
+      Await.result(res, duration).find(_.id == iPhone.id).value mustEqual iPhone.copy(amount = 80)
     }
   }
 }

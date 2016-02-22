@@ -31,5 +31,5 @@ class BasketActorFactory @Inject() (
   actorContext: ActorContext)(
   implicit ec: ExecutionContext) {
 
-  def get(userId: Long) = actorContext.basketActor(userId)
+  def get() = actorContext.basketActor()
 }

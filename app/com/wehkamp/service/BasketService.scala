@@ -18,40 +18,24 @@ class BasketService @Inject() (
   basketActorFactory: BasketActorFactory)(
   implicit ec: ExecutionContext) {
 
-  def list(userId: Long): Future[Either[InternalError.type, Set[ShoppingProduct]]] = {
-    (basketActorFactory.get(userId) ? ActorProtocol.ListAll)
+  def put(products: Set[BasketProduct], productId: String, howMany: Long): Future[BasketServiceResponse] = {
+    (basketActorFactory.get() ? ActorProtocol.Add(products, productId, howMany))
       .map {
-        case s: Set[_]  => Right(s.map(_.asInstanceOf[ShoppingProduct]))
-        case _          => Left(InternalError)
+        case ActorProtocol.Done(p)        => Put(p)
+        case ActorProtocol.OutOfStock     => OutOfStock
+        case ActorProtocol.StockNotEnough => StockNotEnough
+        case ActorProtocol.InvalidAmount  => InvalidAmount
+        case _                            => InternalError
       }
   }
 
-  def put(userId: Long, productId: String, howMany: Long): Future[BasketServiceResponse] = {
-    (basketActorFactory.get(userId) ? ActorProtocol.Add(productId, howMany))
+  def remove(products: Set[BasketProduct], productId: String, howMany: Long): Future[BasketServiceResponse] = {
+    (basketActorFactory.get() ? ActorProtocol.Remove(products, productId, howMany))
       .map {
-        case ActorProtocol.Done                     => Put
-        case ActorProtocol.OutOfStock               => OutOfStock
-        case ActorProtocol.StockNotEnough           => StockNotEnough
-        case ActorProtocol.InvalidAmount => InvalidAmount
-        case _                                      => InternalError
-      }
-  }
-
-  def remove(userId: Long, productId: String, howMany: Long): Future[BasketServiceResponse] = {
-    (basketActorFactory.get(userId) ? ActorProtocol.Remove(productId, howMany))
-      .map {
-        case ActorProtocol.Done                     => Deleted
-        case ActorProtocol.ProductNotInBasket       => NotInBasket
-        case ActorProtocol.InvalidAmount => InvalidAmount
-        case _                                      => InternalError
-      }
-  }
-
-  def removeAll(userId: Long): Future[BasketServiceResponse] = {
-    (basketActorFactory.get(userId) ? ActorProtocol.RemoveAll)
-      .map{
-        case ActorProtocol.Done => Emptied
-        case _                  => InternalError
+        case ActorProtocol.Done(p)            => Deleted(p)
+        case ActorProtocol.ProductNotInBasket => NotInBasket
+        case ActorProtocol.InvalidAmount      => InvalidAmount
+        case _                                => InternalError
       }
   }
 }
@@ -62,12 +46,12 @@ class BasketService @Inject() (
 object BasketServiceProtocol {
   sealed trait BasketServiceResponse
 
-  case object Put           extends BasketServiceResponse
-  case object Deleted         extends BasketServiceResponse
-  case object Emptied         extends BasketServiceResponse
-  case object OutOfStock      extends BasketServiceResponse
-  case object StockNotEnough  extends BasketServiceResponse
-  case object InvalidAmount   extends BasketServiceResponse
-  case object NotInBasket     extends BasketServiceResponse
-  case object InternalError   extends BasketServiceResponse
+  case class Put(products: Set[BasketProduct])      extends BasketServiceResponse
+  case class Deleted(products: Set[BasketProduct])  extends BasketServiceResponse
+  case object Emptied                                 extends BasketServiceResponse
+  case object OutOfStock                              extends BasketServiceResponse
+  case object StockNotEnough                          extends BasketServiceResponse
+  case object InvalidAmount                           extends BasketServiceResponse
+  case object NotInBasket                             extends BasketServiceResponse
+  case object InternalError                           extends BasketServiceResponse
 }

@@ -1,6 +1,7 @@
 package com.wehkamp.domain
 
 import java.util.UUID
+import com.wehkamp.service.BasketProduct
 
 /**
   * Entity that represents a products that can be shopped.
@@ -15,7 +16,10 @@ import java.util.UUID
 case class ShoppingProduct(
   id: String,
   product: ProductLike,
-  amount: Long)
+  amount: Long) {
+
+  def toBasket = BasketProduct(id, amount)
+}
 
 object ShoppingProduct {
   def apply(p: ProductLike, count: Long) =

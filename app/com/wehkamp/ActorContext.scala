@@ -3,11 +3,13 @@ package com.wehkamp
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import java.util.UUID
 import javax.inject.Inject
 import akka.actor._
 import akka.util.Timeout
+import com.wehkamp.domain.ShoppingProduct
 import com.wehkamp.repository.InMemoryProducts
-import com.wehkamp.service.{BasketActor, CatalogActor}
+import com.wehkamp.service.{BasketProduct, BasketActor, CatalogActor}
 
 /**
   * Singleton responsible for starting the actors and their context
@@ -25,11 +27,11 @@ class ActorContext @Inject() (system: ActorSystem) {
       ActorConstants.duration)
   }
 
-  def basketActor(userId: Long): ActorRef = {
-    val name = s"Basket-$userId"
+  def basketActor(): ActorRef = {
+    val name = s"Basket-${UUID.randomUUID()}"
 
     Await.result(
-      createIfNotExists(path(name), system.actorOf(BasketActor.props(userId, catalogActor), name)),
+      createIfNotExists(path(name), system.actorOf(BasketActor.props(catalogActor), name)),
       ActorConstants.duration)
   }
 
@@ -47,13 +49,15 @@ object ActorProtocol {
   sealed trait ActorMessage
 
   //commands
-  case object ListAll                                  extends ActorMessage
-  case class  Add(productId: String, howMany: Long)    extends ActorMessage
-  case class  Remove(productId: String, howMany: Long) extends ActorMessage
-  case object RemoveAll                                extends ActorMessage
+  case object ListAll                                                                 extends ActorMessage
+  case class  AddCatalog(productId: String, howMany: Long)     extends ActorMessage
+  case class  RemoveCatalog(productId: String, howMany: Long)  extends ActorMessage
+
+  case class  Add(products: Set[BasketProduct], productId: String, howMany: Long)     extends ActorMessage
+  case class  Remove(products: Set[BasketProduct], productId: String, howMany: Long)  extends ActorMessage
 
   //ok
-  case object Done extends ActorMessage
+  case class Done(products: Set[BasketProduct]) extends ActorMessage
 
   //errors
   case object InvalidAmount       extends ActorMessage
@@ -66,7 +70,7 @@ object ActorConstants {
 
   val actorSystemName = "ShoppingActorSystem"
 
-  val duration = 5 seconds
+  val duration = 2 seconds
   implicit val timeout = Timeout(duration)
 }
 

@@ -25,12 +25,12 @@ private class CatalogActor(productsRepo: ProductsRepository) extends Actor {
     */
   private def active(items: Set[ShoppingProduct]): Receive = {
     case ListAll                   => sender() ! items
-    case Add(productId, amount)    => context become active(add(items, productId, amount))
-    case Remove(productId, amount) => context become active(remove(items, productId, amount))
+    case AddCatalog(productId, amount)    => context become active(add(items, productId, amount))
+    case RemoveCatalog(productId, amount) => context become active(remove(items, productId, amount))
   }
 
   private def add(items: Set[ShoppingProduct], productId: String, amount: Long) =
-    if (amount > 0) sendAndReturn(Done, addValidAmount(items, productId, amount))
+    if (amount > 0) sendAndReturn(Done(addValidAmount(items, productId, amount).map(p => BasketProduct(p.id, p.amount))), addValidAmount(items, productId, amount))
     else            sendAndReturn(InvalidAmount, items)
 
 
@@ -60,10 +60,10 @@ private class CatalogActor(productsRepo: ProductsRepository) extends Actor {
     def removeExisting  = items.filterNot(_.id == productId) ++ find.map(removeAmount)
     def removeAmount(p: ShoppingProduct) = ShoppingProduct.from(p, Some(p.amount - amount))
 
-    if(outOfStock)                    sendAndReturn(OutOfStock, items)
-    else if(notEnoughStock)           sendAndReturn(StockNotEnough, items)
-    else if (currentCount >= amount)  sendAndReturn(Done, removeExisting)
-    else                              sendAndReturn(Done, items)
+    if (outOfStock)                   sendAndReturn(OutOfStock, items)
+    else if (notEnoughStock)          sendAndReturn(StockNotEnough, items)
+    else if (currentCount >= amount)  sendAndReturn(Done(removeExisting.map(p => BasketProduct(p.id, p.amount))), removeExisting)
+    else                              sendAndReturn(Done(items.map(p => BasketProduct(p.id, p.amount))), items)
   }
 
   private def sendAndReturn(msg: ActorMessage, items: Set[ShoppingProduct]) = {

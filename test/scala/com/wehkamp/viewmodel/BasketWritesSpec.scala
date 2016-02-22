@@ -9,8 +9,8 @@ class BasketWritesSpec extends WordSpecLike with MustMatchers {
 
   "a BasketWrites" must {
     "write a ProductLike object " in {
-      import com.wehkamp.viewmodel.BasketWrites.productLikeWriter
-      val product: ProductLike = iPhone
+      import com.wehkamp.viewmodel.ProductWrites.productLikeWriter
+      val product: ProductLike = iPhone.product
       val json = Json.toJson(product)
 
       (json \ "name").as[String] mustEqual "iPhone"
@@ -21,13 +21,12 @@ class BasketWritesSpec extends WordSpecLike with MustMatchers {
     }
 
     "write a BasketProduct object " in {
-      import com.wehkamp.viewmodel.BasketWrites.basketProductWriter
-      import com.wehkamp.viewmodel.BasketReads.productReads
-      val basketProduct = ShoppingProduct(iPhone, 10)
-      val json = Json.toJson(basketProduct)
+      import com.wehkamp.viewmodel.ProductWrites.shoppingProductWriter
+      import com.wehkamp.viewmodel.ProductReads.productLikeReads
+      val json = Json.toJson(iPhone.copy(amount = 10))
 
-      (json \ "id").as[String] mustEqual basketProduct.id
-      (json \ "product").as[ProductLike] mustEqual iPhone
+      (json \ "id").as[String] mustEqual iPhone.id
+      (json \ "product").as[ProductLike] mustEqual iPhone.product
       (json \ "amount").as[Long] mustEqual 10
     }
   }
