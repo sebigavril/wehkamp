@@ -1,13 +1,11 @@
 package com.wehkamp.service
 
 import scala.concurrent.Await
-import com.wehkamp.BasketActorFactory
 import com.wehkamp.ActorConstants.duration
-import com.wehkamp.TestUtils.{id, _}
-import com.wehkamp.domain.ShoppingProduct
+import com.wehkamp.{ActorContextBaseSpec, BasketActorFactory}
+import com.wehkamp.TestUtils._
 import com.wehkamp.repository.InMemoryProducts._
 import com.wehkamp.service.BasketServiceProtocol._
-import com.wehkamp.{ActorContextBaseSpec, WithNextId}
 import org.scalatest.{EitherValues, MustMatchers, WordSpecLike}
 
 class BasketServiceSpec extends ActorContextBaseSpec
@@ -19,7 +17,7 @@ class BasketServiceSpec extends ActorContextBaseSpec
 
   "a BasketService" must {
 
-    "add multiple products to basket" in WithNextId { userId =>
+    "add multiple products to basket" in {
       val res = for {
         res1 <- basketService.put(Set.empty, iPad.id, 2).map(_.asInstanceOf[Put])
         res2 <- basketService.put(Set(iPad.copy(amount = 2).toBasket), iPhone.id, 10).map(_.asInstanceOf[Put])
@@ -29,7 +27,7 @@ class BasketServiceSpec extends ActorContextBaseSpec
       Await.result(res, duration)._2.products mustEqual Set(iPad.copy(amount = 2).toBasket, iPhone.copy(amount = 10).toBasket)
     }
 
-    "remove products from basket" in WithNextId { userId =>
+    "remove products from basket" in {
       val res = for {
         _       <- basketService.put(Set.empty, iPad.id, 2)
         _       <- basketService.put(Set(iPad.copy(amount = 2).toBasket), iPhone.id, 10)
@@ -39,7 +37,7 @@ class BasketServiceSpec extends ActorContextBaseSpec
       Await.result(res, duration).products mustEqual Set(iPad.copy(amount = 2).toBasket, iPhone.copy(amount = 9).toBasket)
     }
 
-    "add must be idempotent" in WithNextId { userId =>
+    "add must be idempotent" in {
       val res = for {
         res1 <- basketService.put(Set.empty, iPad.id, 2).map(_.asInstanceOf[Put])
         res2 <- basketService.put(Set.empty, iPad.id, 2).map(_.asInstanceOf[Put])

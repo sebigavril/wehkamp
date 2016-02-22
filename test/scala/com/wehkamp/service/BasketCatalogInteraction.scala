@@ -2,11 +2,10 @@ package com.wehkamp.service
 
 import scala.concurrent.Await
 import akka.actor.ActorSystem
-import com.wehkamp.{ActorContext, BasketActorFactory, ActorContextBaseSpec, WithNextId}
 import com.wehkamp.ActorConstants.duration
 import com.wehkamp.TestUtils._
-import com.wehkamp.domain.ShoppingProduct
 import com.wehkamp.repository.InMemoryProducts._
+import com.wehkamp.{ActorContext, ActorContextBaseSpec, BasketActorFactory}
 import org.scalatest.{MustMatchers, OptionValues, WordSpecLike}
 
 class BasketCatalogInteraction extends ActorContextBaseSpec
@@ -20,7 +19,7 @@ class BasketCatalogInteraction extends ActorContextBaseSpec
   private val catalogService = new CatalogService(actorContext.catalogActor)
 
   "a Basket and Catalog" must {
-    "add to basket and remove from catalog" in WithNextId { userId =>
+    "add to basket and remove from catalog" in {
       val res = for {
         _           <- basketService.put(Set.empty, iPad.id, 10)
         catalogRes  <- catalogService.list
@@ -29,7 +28,7 @@ class BasketCatalogInteraction extends ActorContextBaseSpec
       Await.result(res, duration).find(_.id == iPad.id).value mustEqual iPad.copy(amount = 90)
     }
 
-    "remove from basket and add to catalog" in WithNextId { userId =>
+    "remove from basket and add to catalog" in {
       val res = for {
         _           <- basketService.put(Set.empty, iPhone.id, 50)
         _           <- basketService.remove(Set(iPhone.copy(amount = 50).toBasket), iPhone.id, 40)

@@ -1,7 +1,8 @@
 package com.wehkamp.service
 
 import scala.concurrent.{ExecutionContext, Await, Future}
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.SupervisorStrategy.Stop
+import akka.actor.{PoisonPill, Actor, ActorRef, Props}
 import akka.pattern.ask
 import com.wehkamp.ActorConstants.{duration, timeout}
 import com.wehkamp.ActorProtocol._
@@ -98,6 +99,7 @@ private class BasketActor(
 
   private def sendAndReturn(msg: ActorMessage,items: Set[BasketProduct]) = {
     sender() ! msg
+    self ! Stop     // My work is done.
     items
   }
 }

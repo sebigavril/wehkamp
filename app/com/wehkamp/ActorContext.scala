@@ -7,9 +7,8 @@ import java.util.UUID
 import javax.inject.Inject
 import akka.actor._
 import akka.util.Timeout
-import com.wehkamp.domain.ShoppingProduct
 import com.wehkamp.repository.InMemoryProducts
-import com.wehkamp.service.{BasketProduct, BasketActor, CatalogActor}
+import com.wehkamp.service.{BasketActor, BasketProduct, CatalogActor}
 
 /**
   * Singleton responsible for starting the actors and their context
@@ -27,13 +26,11 @@ class ActorContext @Inject() (system: ActorSystem) {
       ActorConstants.duration)
   }
 
-  def basketActor(): ActorRef = {
-    val name = s"Basket-${UUID.randomUUID()}"
-
-    Await.result(
-      createIfNotExists(path(name), system.actorOf(BasketActor.props(catalogActor), name)),
-      ActorConstants.duration)
-  }
+  /**
+    * Basket actor is stateless so every time someone asks for an actor, just create one
+    */
+  def basketActor(): ActorRef =
+    system.actorOf(BasketActor.props(catalogActor), s"Basket-${UUID.randomUUID()}")
 
   private def createIfNotExists(path: String, default: => ActorRef) =
     system
@@ -49,7 +46,7 @@ object ActorProtocol {
   sealed trait ActorMessage
 
   //commands
-  case object ListAll                                                                 extends ActorMessage
+  case object ListAll                                          extends ActorMessage
   case class  AddCatalog(productId: String, howMany: Long)     extends ActorMessage
   case class  RemoveCatalog(productId: String, howMany: Long)  extends ActorMessage
 
