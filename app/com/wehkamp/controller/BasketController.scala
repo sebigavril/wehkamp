@@ -3,10 +3,11 @@ package com.wehkamp.controller
 import scala.concurrent.{ExecutionContext, Future}
 import javax.inject.Inject
 import com.wehkamp.controller.Messages._
+import com.wehkamp.domain.BasketProduct
 import com.wehkamp.service.BasketServiceProtocol._
-import com.wehkamp.service.{BasketProduct, BasketService}
+import com.wehkamp.service.BasketService
 import com.wehkamp.viewmodel.ProductReads.basketProductReads
-import com.wehkamp.viewmodel.ProductWrites.basketProductWriter
+import com.wehkamp.viewmodel.ProductWrites.shoppingProductWrites
 import play.api.libs.json.{JsError, Json}
 import play.api.mvc.{Action, Controller}
 
@@ -14,7 +15,7 @@ class BasketController @Inject() (
   basketService: BasketService)(
   implicit ec: ExecutionContext) extends Controller {
 
-  def put(productId: String, amount: Long) = Action.async(parse.tolerantJson) {
+  def put(productId: Long, amount: Long) = Action.async(parse.tolerantJson) {
     implicit request =>
       request.body.validate[Set[BasketProduct]].fold(
         errors => {
@@ -34,7 +35,7 @@ class BasketController @Inject() (
       )
   }
 
-  def delete(productId: String, amount: Long) = Action.async(parse.tolerantJson) {
+  def delete(productId: Long, amount: Long) = Action.async(parse.tolerantJson) {
     implicit request =>
       request.body.validate[Set[BasketProduct]].fold(
         errors => {

@@ -30,7 +30,7 @@ class BasketReadsSpec extends WordSpecLike with MustMatchers with OptionValues {
       val json = Json.parse(
         """
           | {
-          |   "id":"1",
+          |   "id":1,
           |   "product": {
           |       "name":"iPad",
           |       "description":"makes you look cool",
@@ -42,7 +42,7 @@ class BasketReadsSpec extends WordSpecLike with MustMatchers with OptionValues {
 
       val basketProduct = Json.fromJson[ShoppingProduct](json).asOpt.value
 
-      basketProduct.id mustEqual "1"
+      basketProduct.id mustEqual 1
       basketProduct.product.name mustEqual iPad.product.name
       basketProduct.amount mustEqual 2
     }

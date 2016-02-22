@@ -15,10 +15,11 @@ class CatalogController @Inject() (
   implicit ec: ExecutionContext) extends Controller {
 
   def list() = Action.async {
-    import com.wehkamp.viewmodel.ProductWrites.shoppingProductWriter
-    catalogService
-      .list
-      .map(products => Ok(Json.toJson(products)))
+    implicit request =>
+      import com.wehkamp.viewmodel.ProductWrites.shoppingProductWrites
+      catalogService
+        .list
+        .map(products => Ok(Json.toJson(products)))
   }
 
   def add(amount: Int) = Action.async(parse.tolerantJson) {

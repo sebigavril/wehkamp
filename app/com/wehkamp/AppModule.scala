@@ -1,7 +1,5 @@
 package com.wehkamp
 
-import scala.concurrent.ExecutionContext
-import javax.inject.Inject
 import akka.actor.{ActorRef, ActorSystem}
 import com.wehkamp.ActorConstants.actorSystemName
 import com.wehkamp.service.{BasketService, CatalogService}
@@ -24,12 +22,5 @@ class AppModule extends Module {
 
       bind[ActorContext].toInstance(actorContext),
       bind[ActorRef].qualifiedWith("catalogActor").toInstance(actorContext.catalogActor),
-      bind[BasketActorFactory].toSelf)
-}
-
-class BasketActorFactory @Inject() (
-  actorContext: ActorContext)(
-  implicit ec: ExecutionContext) {
-
-  def get() = actorContext.basketActor()
+      bind[ActorRef].qualifiedWith("basketActor").toInstance(actorContext.basketActor()))
 }

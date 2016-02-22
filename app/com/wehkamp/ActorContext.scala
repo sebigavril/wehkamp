@@ -7,13 +7,16 @@ import java.util.UUID
 import javax.inject.Inject
 import akka.actor._
 import akka.util.Timeout
+import com.wehkamp.domain.BasketProduct
 import com.wehkamp.repository.InMemoryProducts
-import com.wehkamp.service.{BasketActor, BasketProduct, CatalogActor}
+import com.wehkamp.service.{BasketActor, CatalogActor}
 
 /**
   * Singleton responsible for starting the actors and their context
   */
-class ActorContext @Inject() (system: ActorSystem) {
+class ActorContext @Inject() (
+  system: ActorSystem,
+  suffix: String = "") {
 
   implicit private val ec = new ExecutionContexts().ec
 
@@ -21,8 +24,9 @@ class ActorContext @Inject() (system: ActorSystem) {
     * Singleton - don't want to have multiple catalogs
     */
   val catalogActor = {
+    val name = s"Catalog${if (suffix == "") "" else "-" + suffix}"
     Await.result(
-      createIfNotExists(path("Catalog"), system.actorOf(CatalogActor.props(InMemoryProducts), "Catalog")),
+      createIfNotExists(path(name), system.actorOf(CatalogActor.props(InMemoryProducts), name)),
       ActorConstants.duration)
   }
 
@@ -30,7 +34,9 @@ class ActorContext @Inject() (system: ActorSystem) {
     * Basket actor is stateless so every time someone asks for an actor, just create one
     */
   def basketActor(): ActorRef =
-    system.actorOf(BasketActor.props(catalogActor), s"Basket-${UUID.randomUUID()}")
+    system.actorOf(
+      BasketActor.props(catalogActor),
+      s"Basket-${UUID.randomUUID()}")
 
   private def createIfNotExists(path: String, default: => ActorRef) =
     system
@@ -47,9 +53,10 @@ object ActorProtocol {
 
   object Catalog {
     //commands
-    case object List                                      extends ActorMessage
-    case class  Add(productId: String, howMany: Long)     extends ActorMessage
-    case class  Remove(productId: String, howMany: Long)  extends ActorMessage
+    case object ListAll                                 extends ActorMessage
+    case class  List(basketProds: Set[BasketProduct])   extends ActorMessage
+    case class  Add(productId: Long, howMany: Long)     extends ActorMessage
+    case class  Remove(productId: Long, howMany: Long)  extends ActorMessage
 
     //ok
     case object Done  extends ActorMessage
@@ -57,8 +64,8 @@ object ActorProtocol {
 
   object Basket {
     //commands
-    case class Add(products: Set[BasketProduct], productId: String, howMany: Long)    extends ActorMessage
-    case class Remove(products: Set[BasketProduct], productId: String, howMany: Long) extends ActorMessage
+    case class Add(products: Set[BasketProduct], productId: Long, howMany: Long)    extends ActorMessage
+    case class Remove(products: Set[BasketProduct], productId: Long, howMany: Long) extends ActorMessage
 
     //ok
     case class Done(products: Set[BasketProduct]) extends ActorMessage

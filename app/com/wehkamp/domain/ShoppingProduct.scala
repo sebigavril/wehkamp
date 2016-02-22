@@ -1,7 +1,6 @@
 package com.wehkamp.domain
 
-import java.util.UUID
-import com.wehkamp.service.BasketProduct
+import java.util.concurrent.atomic.AtomicLong
 
 /**
   * Entity that represents a products that can be shopped.
@@ -13,8 +12,8 @@ import com.wehkamp.service.BasketProduct
   * @param product The product in the basket
   * @param amount  The amount of products of this type in the basket
   */
-case class ShoppingProduct(
-  id: String,
+case class ShoppingProduct (
+  id: Long,
   product: ProductLike,
   amount: Long) {
 
@@ -22,9 +21,12 @@ case class ShoppingProduct(
 }
 
 object ShoppingProduct {
+
+  val incrementer = new AtomicLong
+
   def apply(p: ProductLike, count: Long) =
     new ShoppingProduct(
-      UUID.randomUUID().toString,
+      incrementer.incrementAndGet(),
       p,
       count)
 

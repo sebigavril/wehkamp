@@ -15,7 +15,7 @@ object TestUtils extends MustMatchers {
   implicit val ec = new ExecutionContexts().ec
 
   val actorSystem = ActorSystem("TestActorSystem")
-  val actorContext = new ActorContext(actorSystem)
+  val actorContext = (id: Long) => new ActorContext(actorSystem, id.toString)
 
   lazy val iPad     = InMemoryProducts.iPad.toBasket
   lazy val iPhone   = InMemoryProducts.iPhone.toBasket
@@ -23,10 +23,10 @@ object TestUtils extends MustMatchers {
   lazy val candy    = InMemoryProducts.candy.toBasket
 
 
-  def id(p: ProductLike): String = InMemoryProducts.initialProducts.find(_.product == p).get.id
+  def id(p: ProductLike) = InMemoryProducts.initialProducts.find(_.product == p).get.id
 
   def expectProducts(actor: ActorRef, expected: Set[ShoppingProduct]): Unit = {
-    val res = actor ? List
+    val res = actor ? ListAll
     val actual = Await.result(res, duration).asInstanceOf[Set[ShoppingProduct]]
 
     expectProducts(actual, expected)

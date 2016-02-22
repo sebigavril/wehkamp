@@ -2,43 +2,51 @@ package com.wehkamp.service
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
-import javax.inject.Inject
+import javax.inject.{Named, Inject}
+import akka.actor.ActorRef
 import akka.pattern.ask
-import com.wehkamp.BasketActorFactory
-import com.wehkamp.domain.ShoppingProduct
-import com.wehkamp.service.BasketServiceProtocol._
-import com.wehkamp.ActorProtocol.Basket
-import com.wehkamp.ActorProtocol
 import com.wehkamp.ActorConstants.timeout
+import com.wehkamp.ActorProtocol.{Catalog, Basket}
+import com.wehkamp.ActorProtocol
+import com.wehkamp.domain.{ShoppingProduct, BasketProduct}
+import com.wehkamp.service.BasketServiceProtocol._
 
 
 /**
   * Middleware intended to abstract the communication with the underlying actors
   */
 class BasketService @Inject() (
-  basketActorFactory: BasketActorFactory)(
+  @Named("basketActor") basketActor: ActorRef,
+  @Named("catalogActor") catalogActor: ActorRef)(
   implicit ec: ExecutionContext) {
 
-  def put(products: Set[BasketProduct], productId: String, howMany: Long): Future[BasketServiceResponse] = {
-    (basketActorFactory.get() ? Basket.Add(products, productId, howMany))
-      .map {
-        case Basket.Done(p)        => Put(p)
-        case ActorProtocol.OutOfStock     => OutOfStock
-        case ActorProtocol.StockNotEnough => StockNotEnough
-        case ActorProtocol.InvalidAmount  => InvalidAmount
-        case _                            => InternalError
+  def put(products: Set[BasketProduct], productId: Long, howMany: Long): Future[BasketServiceResponse] = {
+    (basketActor ? Basket.Add(products, productId, howMany))
+      .flatMap {
+        case Basket.Done(basketProds)     => toShopping(basketProds, shoppingProds => Put(shoppingProds))
+        case ActorProtocol.OutOfStock     => Future.successful(OutOfStock)
+        case ActorProtocol.StockNotEnough => Future.successful(StockNotEnough)
+        case ActorProtocol.InvalidAmount  => Future.successful(InvalidAmount)
+        case _                            => Future.successful(InternalError)
       }
   }
 
-  def remove(products: Set[BasketProduct], productId: String, howMany: Long): Future[BasketServiceResponse] = {
-    (basketActorFactory.get() ? Basket.Remove(products, productId, howMany))
-      .map {
-        case Basket.Done(p)            => Deleted(p)
-        case ActorProtocol.ProductNotInBasket => NotInBasket
-        case ActorProtocol.InvalidAmount      => InvalidAmount
-        case _                                => InternalError
+  def remove(products: Set[BasketProduct], productId: Long, howMany: Long): Future[BasketServiceResponse] = {
+    (basketActor ? Basket.Remove(products, productId, howMany))
+      .flatMap {
+        case Basket.Done(basketProds)         => toShopping(basketProds, shoppingProds => Deleted(shoppingProds))
+        case ActorProtocol.ProductNotInBasket => Future.successful(NotInBasket)
+        case ActorProtocol.InvalidAmount      => Future.successful(InvalidAmount)
+        case _                                => Future.successful(InternalError)
       }
   }
+
+  private def toShopping(newProducts: Set[BasketProduct], f: Set[ShoppingProduct] => BasketServiceResponse) =
+    (catalogActor ? Catalog.List(newProducts))
+      .map {
+        case p: Set[_] => f(p.map(_.asInstanceOf[ShoppingProduct]))
+        case _ => InternalError
+      }
 }
 
 /**
@@ -47,8 +55,8 @@ class BasketService @Inject() (
 object BasketServiceProtocol {
   sealed trait BasketServiceResponse
 
-  case class Put(products: Set[BasketProduct])        extends BasketServiceResponse
-  case class Deleted(products: Set[BasketProduct])    extends BasketServiceResponse
+  case class Put(products: Set[ShoppingProduct])      extends BasketServiceResponse
+  case class Deleted(products: Set[ShoppingProduct])  extends BasketServiceResponse
   case object Emptied                                 extends BasketServiceResponse
   case object OutOfStock                              extends BasketServiceResponse
   case object StockNotEnough                          extends BasketServiceResponse

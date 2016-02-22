@@ -3,9 +3,9 @@ package com.wehkamp.service
 import scala.concurrent.Await
 import akka.actor.ActorSystem
 import com.wehkamp.ActorConstants.duration
-import com.wehkamp.TestUtils.{expectProducts, ec}
+import com.wehkamp.TestUtils.ec
 import com.wehkamp.repository.InMemoryProducts._
-import com.wehkamp.{ActorContext, ActorContextBaseSpec, BasketActorFactory}
+import com.wehkamp.{ActorContext, ActorContextBaseSpec}
 import org.scalatest.{MustMatchers, OptionValues, WordSpecLike}
 
 class BasketCatalogInteraction extends ActorContextBaseSpec
@@ -15,7 +15,7 @@ class BasketCatalogInteraction extends ActorContextBaseSpec
 
   private val actorSystem = ActorSystem("InteractionActorSystem")
   private val actorContext = new ActorContext(actorSystem)
-  private val basketService = new BasketService(new BasketActorFactory(actorContext))
+  private val basketService = new BasketService(actorContext.basketActor(), actorContext.catalogActor)
   private val catalogService = new CatalogService(actorContext.catalogActor)
 
   "a Basket and Catalog" must {

@@ -1,25 +1,24 @@
 package com.wehkamp.viewmodel
 
-import com.wehkamp.domain.{SmartLike, PhoneLike, ShoppingProduct, ProductLike}
-import com.wehkamp.service.BasketProduct
+import com.wehkamp.domain._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Writes._
 import play.api.libs.json._
 
 object ProductWrites {
 
-  implicit def shoppingProductWriter: Writes[ShoppingProduct] =
+  implicit def shoppingProductWrites: Writes[ShoppingProduct] =
     (
-      (__ \ 'id).write[String] ~
+      (__ \ 'id).write[Long] ~
         (__ \ 'product).write[ProductLike] ~
         (__ \ 'amount).write[Long]) (shoppingProduct => (
       shoppingProduct.id,
       shoppingProduct.product,
       shoppingProduct.amount))
 
-  implicit def basketProductWriter: Writes[BasketProduct] =
+  implicit def basketProductWrites: Writes[BasketProduct] =
     (
-      (__ \ 'id).write[String] ~
+      (__ \ 'id).write[Long] ~
         (__ \ 'amount).write[Long]) (basketProduct => (
       basketProduct.id,
       basketProduct.amount))

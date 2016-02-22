@@ -8,7 +8,7 @@ import com.wehkamp.ActorConstants.{duration, timeout}
 import com.wehkamp.ActorProtocol.Catalog
 import com.wehkamp.ActorProtocol.Basket._
 import com.wehkamp.ActorProtocol._
-import com.wehkamp.domain.ShoppingProduct
+import com.wehkamp.domain.{BasketProduct, ShoppingProduct}
 
 /**
   * The basket that is attributed to a certain user.
@@ -30,29 +30,39 @@ private class BasketActor(
     *
     * A better approach is suggested in [[com.wehkamp.service.CatalogActor]]
     */
-  private def add(items: Set[BasketProduct], productId: String, amount: Long) = {
+  private def add(items: Set[BasketProduct], productId: Long, amount: Long) = {
     if (amount > 0) addValidAmount(items, productId, amount)
     else            sendAndReturn(InvalidAmount, items)
   }
 
-  private def addValidAmount(items: Set[BasketProduct], productId: String, amount: Long) = {
-    val productsInCatalog = (catalog ? Catalog.List).map(_.asInstanceOf[Set[ShoppingProduct]])
+  private def addValidAmount(items: Set[BasketProduct], productId: Long, amount: Long) = {
+    val productsInCatalog = (catalog ? Catalog.ListAll).map(_.asInstanceOf[Set[ShoppingProduct]])
 
     val res = productsInCatalog.flatMap {
       _.find(_.id == productId) match {
-        case Some(product)  => addProductIfStillAvailable(items, product, amount)
-        case None           => Future.successful(sendAndReturn(OutOfStock, items))
+        case None                     => Future.successful(sendAndReturn(OutOfStock, items))
+        case Some(p) if p.amount == 0 => Future.successful(sendAndReturn(OutOfStock, items))
+        case Some(p)                  => addIfStillAvailable(items, p, amount)
       }
     }
     Await.result(res, duration)
   }
 
-  private def addProductIfStillAvailable(items: Set[BasketProduct], product: ShoppingProduct, amount: Long) = {
-    val catalogResponse = catalog ? Catalog.Remove(product.id, amount)
+  private def addIfStillAvailable(items: Set[BasketProduct], catalogProduct: ShoppingProduct, amount: Long) = {
+    items.find(_.id == catalogProduct.id) match {
+      case Some(p) if p.amount == amount  => Future.successful(sendAndReturn(Done(items), items))
+      case Some(p)                        => addIfNotAlreadyIn(items, catalogProduct, amount - p.amount)
+      case None                           => addIfNotAlreadyIn(items, catalogProduct, amount)
+    }
+  }
+
+  private def addIfNotAlreadyIn(items: Set[BasketProduct], catalogProduct: ShoppingProduct, amount: Long) = {
+    val catalogResponse = catalog ? Catalog.Remove(catalogProduct.id, amount)
     catalogResponse.map {
+      case InvalidAmount  => sendAndReturn(InvalidAmount, items)
       case OutOfStock     => sendAndReturn(OutOfStock, items)
       case StockNotEnough => sendAndReturn(StockNotEnough, items)
-      case Catalog.Done   => addProduct(items, product, amount)
+      case Catalog.Done   => addProduct(items, catalogProduct, amount)
     }
   }
 
@@ -69,19 +79,19 @@ private class BasketActor(
     }
   }
 
-  private def remove(items: Set[BasketProduct], productId: String, amount: Long) = {
+  private def remove(items: Set[BasketProduct], productId: Long, amount: Long) = {
     if (amount > 0) removeValidAmount(items, productId, amount)
     else            sendAndReturn(InvalidAmount, items)
   }
 
-  private def removeValidAmount(items: Set[BasketProduct], productId: String, amount: Long) = {
+  private def removeValidAmount(items: Set[BasketProduct], productId: Long, amount: Long) = {
     items.find(_.id == productId) match {
       case Some(p)  => removeExistingProduct(items, productId, amount, p.amount)
       case None     => sendAndReturn(ProductNotInBasket, items)
     }
   }
 
-  private def removeExistingProduct(items: Set[BasketProduct], productId: String, amount: Long, currentAmount: Long) = {
+  private def removeExistingProduct(items: Set[BasketProduct], productId: Long, amount: Long, currentAmount: Long) = {
     def findProduct                       = items.find(_.id == productId)
     def allExcludingProduct               = items.filterNot(_.id == productId)
     def removeAmount(p: BasketProduct)  = BasketProduct(p.id, p.amount - amount)
@@ -94,12 +104,7 @@ private class BasketActor(
     sendAndReturn(Done(finalItems), finalItems)
   }
 
-  private def removeAll(items: Set[ShoppingProduct]) = {
-    items.foreach(p => catalog ! Catalog.Add(p.id, p.amount))
-    sendAndReturn(Done(Set.empty), Set.empty)
-  }
-
-  private def sendAndReturn(msg: ActorMessage,items: Set[BasketProduct]) = {
+  private def sendAndReturn(msg: ActorMessage, items: Set[BasketProduct]) = {
     sender() ! msg
     self ! Stop     // My work is done.
     items
@@ -111,6 +116,3 @@ object BasketActor {
   def props(catalog: ActorRef)(implicit ec: ExecutionContext) = Props(new BasketActor(catalog))
 }
 
-case class BasketProduct(
-  id: String,
-  amount: Long)

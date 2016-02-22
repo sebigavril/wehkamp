@@ -2,5 +2,5 @@ GET     /                       @com.wehkamp.controller.CatalogController.list()
 GET     /api/catalog            @com.wehkamp.controller.CatalogController.list()
 POST    /api/catalog            @com.wehkamp.controller.CatalogController.add(amount: Int ?= 1)
 
-PUT     /api/shoppingbasket     @com.wehkamp.controller.BasketController.put(productId: String, amount: Long ?= 1)
-DELETE  /api/shoppingbasket     @com.wehkamp.controller.BasketController.delete(productId: String, amount: Long ?= 1)
+PUT     /api/shoppingbasket     @com.wehkamp.controller.BasketController.put(productId: Long, amount: Long ?= 1)
+DELETE  /api/shoppingbasket     @com.wehkamp.controller.BasketController.delete(productId: Long, amount: Long ?= 1)
