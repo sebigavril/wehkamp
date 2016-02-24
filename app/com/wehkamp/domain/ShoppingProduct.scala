@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong
   * @param product The product in the basket
   * @param amount  The amount of products of this type in the basket
   */
-case class ShoppingProduct (
+case class ShoppingProduct(
   id: Long,
   product: ProductLike,
   amount: Long) {

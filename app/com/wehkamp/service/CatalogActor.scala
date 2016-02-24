@@ -42,7 +42,7 @@ private class CatalogActor(productsRepo: ProductsRepository) extends Actor {
   private def addValidAmount(items: Set[ShoppingProduct], productId: Long, amount: Long) = {
     items.find(_.id == productId) match {
       case Some(p)  => items.filterNot(_.id == productId) + ShoppingProduct.from(p, Some(amount + p.amount))
-      case None     => ???
+      case None     => sendAndReturn(OutOfStock, items)
     }
   }
 

@@ -1,11 +1,10 @@
 package com.wehkamp.controller
 
-import com.wehkamp.{WithNextId, ActorContextBaseSpec}
 import com.wehkamp.TestUtils._
 import com.wehkamp.domain.{BasketProduct, ShoppingProduct}
 import com.wehkamp.repository.InMemoryProducts
-import com.wehkamp.service.{BasketService, CatalogService}
 import com.wehkamp.viewmodel.ProductReads._
+import com.wehkamp.{ActorContextBaseSpec, WithNextId}
 import org.scalatest.{MustMatchers, OptionValues, WordSpecLike}
 import play.api.http.MimeTypes._
 import play.api.libs.json.Json
@@ -117,12 +116,6 @@ class BasketControllerSpec extends ActorContextBaseSpec
       }
     }
   }
-
-  private def basketService(id: Long) = new BasketService(actorContext(id).basketActor(), actorContext(id).catalogActor)
-  private def basketController(id: Long) = new BasketController(basketService(id))
-
-  private def catalogService(id: Long) = new CatalogService(actorContext(id).catalogActor)
-  private def catalogController(id: Long) = new CatalogController(catalogService(id))
 
   private def basketProductJson(id: Long, amount: Long = 1) = {
     import com.wehkamp.viewmodel.ProductWrites.basketProductWrites

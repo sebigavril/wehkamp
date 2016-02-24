@@ -93,6 +93,4 @@ class BasketActorSpec extends ActorContextBaseSpec
       actual mustEqual ProductNotInBasket
     }
   }
-
-  private def basket(id: Long) = actorContext(id).basketActor()
 }

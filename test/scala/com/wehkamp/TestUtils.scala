@@ -14,9 +14,6 @@ object TestUtils extends MustMatchers {
 
   implicit val ec = new ExecutionContexts().ec
 
-  val actorSystem = ActorSystem("TestActorSystem")
-  val actorContext = (id: Long) => new ActorContext(actorSystem, id.toString)
-
   lazy val iPad     = InMemoryProducts.iPad.toBasket
   lazy val iPhone   = InMemoryProducts.iPhone.toBasket
   lazy val galaxyS  = InMemoryProducts.galaxyS.toBasket

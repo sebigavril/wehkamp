@@ -92,8 +92,8 @@ private class BasketActor(
   }
 
   private def removeExistingProduct(items: Set[BasketProduct], productId: Long, amount: Long, currentAmount: Long) = {
-    def findProduct                       = items.find(_.id == productId)
-    def allExcludingProduct               = items.filterNot(_.id == productId)
+    def findProduct                     = items.find(_.id == productId)
+    def allExcludingProduct             = items.filterNot(_.id == productId)
     def removeAmount(p: BasketProduct)  = BasketProduct(p.id, p.amount - amount)
 
     catalog ! Catalog.Add(productId, amount)

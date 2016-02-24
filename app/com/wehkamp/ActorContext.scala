@@ -1,15 +1,18 @@
 package com.wehkamp
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
+
 import akka.actor._
 import akka.util.Timeout
+import com.wehkamp.ActorConstants.atomicInt
 import com.wehkamp.domain.BasketProduct
 import com.wehkamp.repository.InMemoryProducts
 import com.wehkamp.service.{BasketActor, CatalogActor}
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 /**
   * Singleton responsible for starting the actors and their context
@@ -21,7 +24,7 @@ class ActorContext @Inject() (
   implicit private val ec = new ExecutionContexts().ec
 
   /**
-    * Singleton - don't want to have multiple catalogs
+    * Singleton - don't want to have multiple catalogs in the same context
     */
   val catalogActor = {
     val name = s"Catalog${if (suffix == "") "" else "-" + suffix}"
@@ -36,7 +39,7 @@ class ActorContext @Inject() (
   def basketActor(): ActorRef =
     system.actorOf(
       BasketActor.props(catalogActor),
-      s"Basket-${UUID.randomUUID()}")
+      s"Basket-${atomicInt.incrementAndGet()}")
 
   private def createIfNotExists(path: String, default: => ActorRef) =
     system
@@ -81,6 +84,8 @@ object ActorProtocol {
 object ActorConstants {
 
   val actorSystemName = "ShoppingActorSystem"
+
+  val atomicInt = new AtomicLong(1)
 
   val duration = 2 seconds
   implicit val timeout = Timeout(duration)
