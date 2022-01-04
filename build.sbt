@@ -15,6 +15,7 @@ resolvers ++=  Seq(
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/")
 
 libraryDependencies ++= Seq(
+  "org.apache.logging.log4j" % "log4j-core" % "2.12.0",
   "com.typesafe.akka" %  "akka-actor_2.11"  % akkaVersion,
   "com.typesafe.akka" %% "akka-slf4j"       % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit"     % akkaVersion,
