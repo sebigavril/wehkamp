@@ -16,6 +16,7 @@ resolvers ++=  Seq(
 
 libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-core" % "2.12.0",
+  "org.apache.logging.log4j" % "log4j-core" % "2.11.0",
   "com.typesafe.akka" %  "akka-actor_2.11"  % akkaVersion,
   "com.typesafe.akka" %% "akka-slf4j"       % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit"     % akkaVersion,
